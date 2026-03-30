@@ -2,6 +2,8 @@
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MockTest, MockQuestion } from "@/lib/data/mock-test-data";
+import { useLanguage } from "@/lib/language-context";
+import { mockTranslationsEN } from "@/lib/data/mock-translations-en";
 import { CheckCircle, XCircle, RotateCcw, ArrowRight, Trophy, Target, Clock } from "lucide-react";
 
 type QuestionState = "unanswered" | "first-wrong" | "correct" | "failed";
@@ -14,6 +16,8 @@ interface QuestionResult {
 }
 
 export default function MockTestEngine({ test }: { test: MockTest }) {
+    const { lang } = useLanguage();
+    const t = (en: string, hi: string) => lang === "en" ? en : hi;
     const [currentQ, setCurrentQ] = useState(0);
     const [results, setResults] = useState<Record<string, QuestionResult>>(
         Object.fromEntries(test.questions.map(q => [q.id, { state: "unanswered", selectedAnswer: null, firstAttempt: null, attempts: 0 }]))
@@ -91,7 +95,7 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                     </div>
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-6 text-left">
                         <p className="text-xs text-amber-400 font-medium mb-1">💡 Two-Chance System</p>
-                        <p className="text-xs text-gray-400">Wrong answer select kare toh ek aur chance milega. Doosri baar bhi galat ho toh correct answer highlight ho jayega with explanation.</p>
+                        <p className="text-xs text-gray-400">{t("Select a wrong answer and you get a second chance. Wrong again and the correct answer is highlighted with an explanation.", "Wrong answer select kare toh ek aur chance milega. Doosri baar bhi galat ho toh correct answer highlight ho jayega with explanation.")}</p>
                     </div>
                     <button onClick={() => setStarted(true)} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all text-sm">
                         Start Test →
@@ -109,7 +113,7 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                         <Trophy className={`w-10 h-10 ${passed ? "text-green-400" : "text-red-400"}`} />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-1">{passed ? "🎉 Congratulations! PASS" : "❌ Not Passed"}</h2>
-                    <p className="text-gray-400 text-sm mb-6">{passed ? "Bahut accha! Aap ne pass kar liya!" : "Koi baat nahi — dobara try karo!"}</p>
+                    <p className="text-gray-400 text-sm mb-6">{passed ? t("Excellent! You passed!", "Bahut accha! Aap ne pass kar liya!") : t("Don't worry — try again!", "Koi baat nahi — dobara try karo!")}</p>
                     <div className="flex justify-center gap-8 mb-6">
                         <div><div className="text-3xl font-bold text-white">{scoreValue}<span className="text-lg text-gray-500">/{test.totalMarks}</span></div><div className="text-xs text-gray-500">Score</div></div>
                         <div><div className="text-3xl font-bold text-green-400">{totalCorrect}<span className="text-lg text-gray-500">/{test.questions.length}</span></div><div className="text-xs text-gray-500">Correct</div></div>
@@ -127,9 +131,9 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                             const r = results[q.id];
                             return (
                                 <div key={q.id} className={`p-3 rounded-lg border ${r.state === "correct" ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"}`}>
-                                    <p className="text-xs text-gray-300 mb-1"><span className="text-gray-500">Q{idx+1}.</span> {q.question}</p>
+                                    <p className="text-xs text-gray-300 mb-1"><span className="text-gray-500">Q{idx+1}.</span> {lang === "en" && mockTranslationsEN[q.id] ? mockTranslationsEN[q.id].question : q.question}</p>
                                     <p className="text-xs"><span className={r.state === "correct" ? "text-green-400" : "text-red-400"}>{r.state === "correct" ? "✓" : "✗"} Your: {r.selectedAnswer}</span> <span className="text-gray-500">| Correct: <span className="text-green-400">{q.correctAnswer}</span></span></p>
-                                    <p className="text-xs text-gray-500 mt-1">{q.explanation}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{lang === "en" && mockTranslationsEN[q.id] ? mockTranslationsEN[q.id].explanation : q.explanation}</p>
                                 </div>
                             );
                         })}
@@ -173,13 +177,13 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                 <motion.div key={question.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
                     <div className="bg-[#14141f] border border-[#2a2a3a] rounded-2xl p-6 card-glow">
                         <h3 className="text-base font-semibold text-white mb-1">Q{currentQ + 1}.</h3>
-                        <p className="text-sm text-gray-200 mb-5">{question.question}</p>
+                        <p className="text-sm text-gray-200 mb-5">{lang === "en" && mockTranslationsEN[question.id] ? mockTranslationsEN[question.id].question : question.question}</p>
 
                         {/* Second chance hint */}
                         {qResult.state === "first-wrong" && (
                             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                                 className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                                <p className="text-xs text-yellow-400 font-medium">⚠️ Galat answer! Ek aur chance hai — sahi answer select karo!</p>
+                                <p className="text-xs text-yellow-400 font-medium">{t("⚠️ Wrong answer! You have one more chance — select the correct answer!", "⚠️ Galat answer! Ek aur chance hai — sahi answer select karo!")}</p>
                             </motion.div>
                         )}
 
@@ -199,7 +203,7 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                                              isAnswered && (opt.key === qResult.selectedAnswer || opt.key === qResult.firstAttempt) && opt.key !== question.correctAnswer ? <XCircle className="w-4 h-4" /> :
                                              opt.key}
                                         </span>
-                                        <span className="text-sm">{opt.text}</span>
+                                        <span className="text-sm">{lang === "en" && mockTranslationsEN[question.id] ? (mockTranslationsEN[question.id].options.find(o => o.key === opt.key)?.text || opt.text) : opt.text}</span>
                                     </button>
                                 );
                             })}
@@ -216,7 +220,7 @@ export default function MockTestEngine({ test }: { test: MockTest }) {
                                                 {qResult.state === "correct" ? (qResult.attempts === 1 ? "✅ Correct! First try!" : "✅ Correct! (2nd attempt)") : "❌ Incorrect"}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-1">{question.explanation}</p>
+                                        <p className="text-xs text-gray-400 mt-1">{lang === "en" && mockTranslationsEN[question.id] ? mockTranslationsEN[question.id].explanation : question.explanation}</p>
                                     </div>
                                 </motion.div>
                             )}
